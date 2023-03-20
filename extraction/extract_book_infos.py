@@ -1,14 +1,13 @@
 import requests
 from bs4 import BeautifulSoup
-import pandas as pd
 
 
 HEADERS = {"User-Agent" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"}
 
 
-class Extract_book_infos :
-    def __init__(self, url ):
-        self.url = url
+class ExtractBookInfos:
+    def __init__(self, urls ):
+        self.urls = urls
         self.universal_product_code_upc = []
         self.title = []
         self.price_including_tax = []
@@ -19,11 +18,11 @@ class Extract_book_infos :
         self.review_rating = []
         self.image_url = []
 
-        for one_url in self.url:
+        for one_url in self.urls:
             self.response = requests.get(one_url, headers=HEADERS)
             self.html_parse = self.parse_html_page()
 
-            # J'appelle toutes les méthodes dans le constructeur de classe afin d'initialiser automatiquement les variables ci-dessus
+            # J'appelle toutes les méthodes directement dans le constructeur de classe afin de récupérer d'emblée les informations des livres
             self.info_title()
             self.info_description()
             self.info_code_upc_price_tax_available_review()
@@ -54,7 +53,7 @@ class Extract_book_infos :
             article = self.html_parse["soup"].find("article", class_="product_page")
             product_infos = article.find_all("p")
             if product_infos and len(product_infos) > 3:
-                self.product_description.append(product_infos[3].text.encode('latin1').decode('utf8'))
+                self.product_description.append(product_infos[3].text)
             else:
                 self.product_description.append("RAS:0")
 
@@ -67,9 +66,9 @@ class Extract_book_infos :
             tr_product = table_product.find_all("tr")
             if tr_product and len(tr_product) > 6:
                 self.universal_product_code_upc.append(tr_product[0].find("td").text)
-                self.number_available.append(str(int(''.join(filter(str.isdigit, tr_product[5].find("td").text)))))
-                self.price_excluding_tax.append(tr_product[2].find("td").text.split("£")[1])
-                self.price_including_tax.append(tr_product[3].find("td").text.split("£")[1])
+                self.number_available.append(tr_product[5].find("td").text)
+                self.price_excluding_tax.append(tr_product[2].find("td").text)
+                self.price_including_tax.append(tr_product[3].find("td").text)
                 self.review_rating.append(tr_product[6].find("td").text)
             else:
                 self.product_description.append("RAS:0")
@@ -99,14 +98,14 @@ class Extract_book_infos :
             div_product = self.html_parse["soup"].find("div", class_="item active")
             img_product = div_product.find("img")
             if img_product:
-                self.image_url.append("https://books.toscrape.com/media" + img_product["src"].split("/media")[1])
+                self.image_url.append(img_product["src"])
             else:
                 self.image_url.append("RAS:0")
 
     # Méthode qui va enregistrer les données récupérées dans un fichier CSV.
-    def to_csv(self, filepath):
+    def to_transform(self, filepath):
         book = {
-            'product_page_url': self.url,
+            'product_page_url': self.urls,
             'universal_product_code_upc': self.universal_product_code_upc,
             'title': self.title,
             'price_including_tax': self.price_including_tax,
@@ -117,7 +116,3 @@ class Extract_book_infos :
             'review_rating': self.review_rating,
             'image_url': self.image_url
         }
-
-
-        df = pd.DataFrame(book)
-        df.to_csv(filepath, index=False)
