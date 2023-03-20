@@ -101,18 +101,3 @@ class ExtractBookInfos:
                 self.image_url.append(img_product["src"])
             else:
                 self.image_url.append("RAS:0")
-
-    # Méthode qui va enregistrer les données récupérées dans un fichier CSV.
-    def to_transform(self, filepath):
-        book = {
-            'product_page_url': self.urls,
-            'universal_product_code_upc': self.universal_product_code_upc,
-            'title': self.title,
-            'price_including_tax': self.price_including_tax,
-            'price_excluding_tax': self.price_excluding_tax,
-            'number_available': self.number_available,
-            'product_description': self.product_description,
-            'category': self.category,
-            'review_rating': self.review_rating,
-            'image_url': self.image_url
-        }
