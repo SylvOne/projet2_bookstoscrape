@@ -50,6 +50,9 @@ for i in range(len(categories.categories)):
     transformation_infos_produits.transform_books_for_load()
     datas_to_load = transformation_infos_produits.books_transformed
 
+    # Téléchargement des images produits d'une catégorie
+    extraction_infos_produits.download_image(transformation_infos_produits.image_url)
+
     # ---- CHARGEMENT DES DATAS VERS DES FICHIERS CSV. ----
     chargement_des_donnees = LoadDatas(datas_to_load)
     chargement_des_donnees.to_csv()

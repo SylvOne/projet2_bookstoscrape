@@ -101,3 +101,11 @@ class ExtractBookInfos:
                 self.image_url.append(img_product["src"])
             else:
                 self.image_url.append("RAS:0")
+
+    def download_image(self, urls_images):
+        for url_image in urls_images:
+            response = requests.get(url_image)
+            filename = url_image.split("/")[-1]
+            if response.status_code == 200:
+                with open("./images/"+filename, 'wb') as f:
+                    f.write(response.content)
