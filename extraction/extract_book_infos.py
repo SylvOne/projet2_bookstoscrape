@@ -19,13 +19,15 @@ class ExtractBookInfos:
         self.image_url = []
 
         for one_url in self.urls:
+            print(one_url)
             self.response = requests.get(one_url, headers=HEADERS)
             self.html_parse = self.parse_html_page()
 
             # J'appelle toutes les méthodes directement dans le constructeur de classe afin de récupérer d'emblée les informations des livres
             self.info_title()
             self.info_description()
-            self.info_code_upc_price_tax_available_review()
+            self.info_code_upc_price_tax_available()
+            self.info_review_rating()
             self.info_category()
             self.info_img_url()
 
@@ -58,9 +60,12 @@ class ExtractBookInfos:
                 self.product_description.append("RAS:0")
 
     # Methode qui recupere le code UPC, les prix avec et sans taxe, le nbr de produits en stock, et le Review rating
-    def info_code_upc_price_tax_available_review(self):
+    def info_code_upc_price_tax_available(self):
         if self.html_parse["error"]:
             self.universal_product_code_upc.append("RAS:"+ str(self.html_parse["soup"]))
+            self.number_available.append("RAS:"+ str(self.html_parse["soup"]))
+            self.price_excluding_tax.append("RAS:"+ str(self.html_parse["soup"]))
+            self.price_including_tax.append("RAS:"+ str(self.html_parse["soup"]))
         else:
             table_product = self.html_parse["soup"].find("table", class_="table table-striped")
             tr_product = table_product.find_all("tr")
@@ -69,13 +74,27 @@ class ExtractBookInfos:
                 self.number_available.append(tr_product[5].find("td").text)
                 self.price_excluding_tax.append(tr_product[2].find("td").text)
                 self.price_including_tax.append(tr_product[3].find("td").text)
-                self.review_rating.append(tr_product[6].find("td").text)
             else:
-                self.product_description.append("RAS:0")
                 self.universal_product_code_upc.append("RAS:0")
                 self.number_available.append("RAS:0")
                 self.price_excluding_tax.append("RAS:0")
                 self.price_including_tax.append("RAS:0")
+
+    # Methode qui recupere le review_rating du produit
+    def info_review_rating(self):
+        if self.html_parse["error"]:
+            self.review_rating.append("RAS:"+ str(self.html_parse["soup"]))
+        else:
+            div_product = self.html_parse["soup"].find("div", class_="col-sm-6 product_main")
+            # Je vérifie la présence de la balise star-rating One, Two, Three, Four ou Five afin de déterminer le niveau du review_rating
+            star_classes = {'star-rating One': 1, 'star-rating Two': 2, 'star-rating Three': 3, 'star-rating Four': 4, 'star-rating Five': 5}
+            for star_class in star_classes:
+                star_element = div_product.find_all('p', class_=star_class)
+                if star_element:
+                    star_number = star_classes[star_class]
+                    self.review_rating.append(str(star_number))
+                    break
+            else:
                 self.review_rating.append("RAS:0")
 
     # Methode qui recupere la catégorie du produit
